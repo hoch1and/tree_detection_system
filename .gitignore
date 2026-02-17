@@ -1,0 +1,5 @@
+.venv
+.env
+src/data/*
+src/masks/*
+src/train/*
