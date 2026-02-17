@@ -7,7 +7,6 @@
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-%23ffffff.svg?style=for-the-badge&logo=Matplotlib&logoColor=black)](https://matplotlib.org/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 
-```markdown
 # Система обнаружения деревьев для автономного робота
 
 ## Описание проекта
@@ -70,5 +69,4 @@ src
  │   └── annotations_parser.py  # Модуль парсинга аннотаций
 README.md
 .gitignore
-```
 ```
