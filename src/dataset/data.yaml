@@ -1,0 +1,7 @@
+names:
+- tree
+- road
+nc: 2
+path: d:\fqw\src\notebooks\..\dataset
+train: train/images
+val: val/images
