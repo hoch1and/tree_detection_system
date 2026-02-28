@@ -21,3 +21,11 @@ __pycache__/
 *.tar.gz
 *.h5
 *.pkl
+
+!src/data/.gitkeep
+!src/masks/.gitkeep
+!src/bboxes/.gitkeep
+!src/models/.gitkeep
+!src/runs/segment/.gitkeep
+!src/train/.gitkeep
+!src/yolo_seg_labels/.gitkeep
