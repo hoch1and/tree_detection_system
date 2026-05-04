@@ -1,0 +1,97 @@
+realsense_bag_publisher:
+  ros__parameters:
+    bag_path: "/home/h/ros2_ws/src/orchard_nav_system/test_video.bag"
+
+    rgb_topic_out: "/camera/rgb/image_raw"
+    depth_topic_out: "/camera/depth/image_raw"
+
+    frame_id: "camera_link"
+    loop: true
+    publish_rate: 30.0
+    align_depth_to_color: false
+    
+yolo_seg_node:
+  ros__parameters:
+    model_path: "/home/h/ros2_ws/src/orchard_nav_system/yolo26m-seg.pt"
+    rgb_topic: "/camera/rgb/image_raw"
+
+    tree_mask_topic: "/segmentation/tree_mask"
+    road_mask_topic: "/segmentation/road_mask"
+    debug_image_topic: "/segmentation/debug_image"
+
+    imgsz: 640
+    conf: 0.1
+
+    # ВАЖНО:
+    # Поставь реальные class_id из своей модели.
+    # Например:
+    # 0 — tree
+    # 1 — road
+    tree_class_id: 1
+    road_class_id: 0
+
+    publish_debug: true
+
+tree_distance_node:
+  ros__parameters:
+    depth_topic: "/camera/depth/image_raw"
+    tree_mask_topic: "/segmentation/tree_mask"
+    tree_info_topic: "/perception/tree_info"
+
+    max_depth_m: 20.0
+    min_depth_m: 0.1
+    depth_unit_scale: 0.001
+
+    distance_percentile: 20.0
+
+    # Если реальные intrinsics камеры неизвестны, они оцениваются через FOV.
+    # Для RealSense часто горизонтальный FOV около 69 градусов.
+    fx: 0.0
+    fy: 0.0
+    cx: 0.0
+    cy: 0.0
+    horizontal_fov_deg: 69.0
+
+    max_points: 8000
+
+    min_mask_area_ratio: 0.001
+    morph_kernel_size: 5
+
+robot_control_node:
+  ros__parameters:
+    tree_info_topic: "/perception/tree_info"
+    cmd_vel_topic: "/cmd_vel"
+
+    safe_stop_distance: 0.8
+    slow_distance: 2.5
+
+    max_linear_speed: 0.35
+    min_linear_speed: 0.08
+    search_linear_speed: 0.12
+
+    max_angular_speed: 0.8
+
+    angle_kp: 1.2
+    side_balance_kp: 0.4
+
+    center_angle_zone_rad: 0.08
+    tree_area_stop_ratio: 0.35
+
+    hold_last_detection_sec: 2.0
+
+    log_interval_sec: 1.0
+    log_linear_delta: 0.03
+    log_angular_delta: 0.05
+    log_distance_delta: 0.25
+
+visualization_node:
+  ros__parameters:
+    rgb_topic_in: "/camera/rgb/image_raw"
+    tree_mask_topic_in: "/segmentation/tree_mask"
+    tree_info_topic_in: "/perception/tree_info"
+    cmd_vel_topic_in: "/cmd_vel"
+    debug_overlay_topic_out: "/visualization/debug_overlay"
+
+    mask_alpha: 0.35
+    min_contour_area: 150.0
+    show_center_line: true

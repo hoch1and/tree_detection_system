@@ -1,18 +1,17 @@
 .venv
 .env
 
-src/data/*
-src/masks/*
-src/bboxes/*
-src/train/*
-src/dataset/train/*
-src/dataset/val/*
+model_core/data/*
+model_core/masks/*
+model_core/bboxes/*
+model_core/train/*
+model_core/dataset/train/*
+model_core/dataset/val/*
+model_core/models/*
+model_core/yolo_seg_labels/*
+model_core/runs/segment/*
+
 path_planing/
-
-src/models/*
-src/yolo_seg_labels/*
-
-src/runs/segment/*
 
 .ipynb_checkpoints/
 __pycache__/
@@ -21,12 +20,15 @@ __pycache__/
 *.tar.gz
 *.h5
 *.pkl
+*.bag
+*.pt
+*.mp4
+*.docx
 
-!src/data/.gitkeep
-!src/masks/.gitkeep
-!src/bboxes/.gitkeep
-!src/models/.gitkeep
-!src/runs/segment/.gitkeep
-!src/train/.gitkeep
-!src/yolo_seg_labels/.gitkeep
-ВКР. Глава 1.docx
+!model_core/data/.gitkeep
+!model_core/masks/.gitkeep
+!model_core/bboxes/.gitkeep
+!model_core/models/.gitkeep
+!model_core/runs/segment/.gitkeep
+!model_core/train/.gitkeep
+!model_core/yolo_seg_labels/.gitkeep

@@ -1,75 +1,177 @@
 [![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
+[![ROS2](https://img.shields.io/badge/ROS%202-Humble-22314E?style=for-the-badge&logo=ros&logoColor=white)](https://docs.ros.org/en/humble/)
 [![OpenCV](https://img.shields.io/badge/opencv-%23white.svg?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)](https://pytorch.org/)
 [![Ultralytics](https://img.shields.io/badge/Ultralytics-%23FF6F00.svg?style=for-the-badge&logo=YOLO&logoColor=white)](https://ultralytics.com/)
-[![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)](https://numpy.org/)
-[![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
-[![Matplotlib](https://img.shields.io/badge/Matplotlib-%23ffffff.svg?style=for-the-badge&logo=Matplotlib&logoColor=black)](https://matplotlib.org/)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
-[![scikit-image](https://img.shields.io/badge/scikit--image-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-image.org/)
 
-# Система обнаружения деревьев для автономного робота
+# Система обнаружения деревьев для автономной навигации робота
 
-## Описание проекта
-Разработка системы компьютерного зрения для обнаружения деревьев в лесной местности с целью обеспечения навигации автономного робота. Система позволяет распознавать деревья и дороги (классы: tree, road) для планирования безопасного маршрута.
+Проект представляет собой прототип системы компьютерного зрения для обнаружения деревьев в саду и формирования навигационных параметров автономного робота.
 
-## Реализованный функционал
+Система использует обученную модель YOLO-seg для сегментации деревьев, совмещает маску дерева с depth-кадром и рассчитывает расстояние, смещение и угол до дерева. На основе этих данных формируется команда движения робота в ROS 2.
 
-### 1. Подготовка данных
-- **Загрузка датасета**: импорт изображений с размеченными объектами из `dataset.pkl`
-- **Конвертация bbox**: преобразование разрозненных bbox в YOLO-формат для обучения детекции
-- **Визуализация**: анализ качества разметки, выявление проблем с bbox
+___
+## Основной пайплайн
 
-### 2. Сегментация
-- **Генерация масок**: создание бинарных масок для каждого изображения (3 класса: background, tree, road)
-- **Конвертация в YOLO-seg**: преобразование PNG масок в полигоны для YOLO сегментации
-- **Структурирование**: подготовка датасета в формате train/val с data.yaml
+```text
+RealSense RGB-D bag
+        ↓
+YOLO-seg segmentation
+        ↓
+tree mask
+        ↓
+depth-based 3D postprocessing
+        ↓
+tree distance / angle / offset
+        ↓
+/cmd_vel
+        ↓
+debug visualization
+```
 
-### 3. Обучение
-- **Модель**: YOLO26m-seg (предобученная на сегментацию)
-- **Метрики**: mAP50-95 = 0.837, mAP50 = 0.988
-- **Классы**: tree (mAP50-95=0.834), road (mAP50-95=0.840)
-- **Логи**: сохранение всех графиков и метрик в `runs/segment/`
+___
+## Что реализовано
 
-### 4. Визуализация
-- Графики обучения (precision, recall, F1, confusion matrix)
-- Примеры предсказаний: оригинал + ground truth + предсказанная маска
+* подготовка датасета для YOLO-seg;
+* обучение модели сегментации классов `tree` и `road`;
+* ROS 2-пакет `orchard_nav_system`;
+* публикация RGB-D данных из RealSense `.bag`;
+* инференс YOLO-seg в ROS 2;
+* расчет расстояния и положения дерева по depth-кадру;
+* формирование команды движения `/cmd_vel`;
+* визуализация результата поверх RGB-кадра;
+* запись демонстрационного видео.
 
-## Структура репозитория
+___
+## Метрики модели
+
+| Класс | mAP50 | mAP50-95 |
+| ----- | ----: | -------: |
+| tree  | 0.988 |    0.834 |
+| road  | 0.988 |    0.840 |
+| all   | 0.988 |    0.837 |
+
+___
+## Основные ROS 2-ноды
+
+| Нода                      | Назначение                                         |
+| ------------------------- | -------------------------------------------------- |
+| `realsense_bag_publisher` | публикует RGB и depth из RealSense `.bag`          |
+| `yolo_seg_node`           | запускает YOLO-seg и публикует маску дерева        |
+| `tree_distance_node`      | рассчитывает расстояние, смещение и угол до дерева |
+| `robot_control_node`      | формирует команду движения `/cmd_vel`              |
+| `visualization_node`      | рисует итоговую визуализацию                       |
+| `video_recorder_node`     | сохраняет демонстрационное видео                   |
+
+___
+## Основные топики
+
+| Топик                          | Назначение            |
+| ------------------------------ | --------------------- |
+| `/camera/rgb/image_raw`        | RGB-кадр              |
+| `/camera/depth/image_raw`      | depth-кадр            |
+| `/segmentation/tree_mask`      | маска дерева          |
+| `/perception/tree_info`        | параметры дерева      |
+| `/cmd_vel`                     | команда движения      |
+| `/visualization/debug_overlay` | итоговая визуализация |
+
+Формат `/perception/tree_info`:
+
+```text
+[distance_m, mean_x_m, mean_z_m, angle_rad, left_ratio, right_ratio, tree_area_ratio, valid]
+```
+
+___
+## Запуск ROS 2-пайплайна
+```bash
+cd ~/ros2_ws
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+ros2 launch orchard_nav_system orchard_nav.launch.py
+```
+
+___
+## Просмотр визуализации
+```bash
+ros2 run rqt_image_view rqt_image_view
+```
+
+___
+## Запись демонстрационного видео
+
+Начать запись:
+```bash
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
+
+ros2 run orchard_nav_system video_recorder_node --ros-args \
+  -p image_topic:=/visualization/debug_overlay \
+  -p output_path:=/home/h/orchard_nav_demo.mp4 \
+  -p fps:=25.0
+```
+
+Остановить запись:
+```text
+Ctrl+C
+```
+
+___
+## Структура проекта
+```text
+.
+├── model_core/
+│   ├── dataset/
+│   │   ├── train/
+│   │   │   ├── images/
+│   │   │   └── labels/
+│   │   ├── val/
+│   │   │   ├── images/
+│   │   │   └── labels/
+│   │   └── data.yaml
+│   ├── data/
+│   │   └── dataset.pkl
+│   ├── train/
+│   ├── masks/
+│   ├── yolo_seg_labels/
+│   ├── bboxes/
+│   ├── runs/
+│   ├── models/
+│   ├── notebooks/
+│   └── utils/
+│
+├── orchard_nav_system/
+│   ├── config/
+│   │   └── params.yaml
+│   ├── launch/
+│   │   └── orchard_nav.launch.py
+│   ├── orchard_nav_system/
+│   │   ├── __init__.py
+│   │   ├── realsense_bag_publisher.py
+│   │   ├── yolo_seg_node.py
+│   │   ├── tree_distance_node.py
+│   │   ├── robot_control_node.py
+│   │   ├── visualization_node.py
+│   │   └── video_recorder_node.py
+│   ├── resource/
+│   ├── package.xml
+│   ├── setup.cfg
+│   └── setup.py
+│
+├── requirements.txt
+├── README.md
+├── .gitignore
+└── LICENSE
+```
+
+___
+## Ограничения
+* тестирование выполнено на записанном RealSense `.bag`, а не на реальном роботе;
+* фактический FPS ограничен скоростью чтения `.bag`;
+* управление пока реактивное, без полноценного SLAM/Nav2;
+* система является исследовательским прототипом.
+
+___
+## Пример работы
 ```markdown
-src
- ├── dataset/                  # Датасет для YOLO
- │   ├── train/
- │   │   ├── images/           # тренировочные изображения
- │   │   └── labels/           # полигоны сегментации
- │   ├── val/
- │   │   ├── images/           # валидационные изображения
- │   │   └── labels/           # полигоны сегментации
- │   └── data.yaml             # конфиг датасета
- ├── data/
- │   └── dataset.pkl           # исходные аннотации
- ├── train/                    # исходные изображения
- ├── masks/                    # PNG маски сегментации
- ├── yolo_seg_labels/          # сконвертированные полигоны
- ├── bboxes/                   # YOLO bbox (для детекции)
- ├── runs/                     # результаты обучения
- ├── models/                   # модели
- ├── notebooks/                # ноутбуки с тестами
- └── utils/
-requirements.txt
-README.md
-.gitignore
-LICENSE
-```
-
-## Использование
-
-### Обучение
-```bash
-python utils/yolo_train.py --project-name tree_segmentation --experiment-dir yolo_seg_training
-```
-
-### Визуализация
-```bash
-jupyter notebook notebooks/yolo_test.ipynb
+![Пример работы системы](exmpl.png)
 ```
